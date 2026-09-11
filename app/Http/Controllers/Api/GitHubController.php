@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+use App\Models\GitHubSearchHistory;
+
 
 class GitHubController extends Controller
 {
@@ -153,6 +155,17 @@ class GitHubController extends Controller
 
         $score += $profileScore;
 
+        GitHubSearchHistory::updateOrCreate(
+            [
+                'username' => $user['login'] ?? $username,
+            ],
+            [
+                'name' => $user['name'] ?? null,
+                'avatar' => $user['avatar_url'] ?? null,
+                'developer_score' => $score,
+            ]
+        );
+
         return response()->json([
             'status' => true,
             'data' => [
@@ -162,12 +175,54 @@ class GitHubController extends Controller
                 'top_language' => $topLanguage,
                 'languages' => $languages,
                 'developer_score' => $score,
+
                 'top_repository' => $topRepository ? [
                     'name' => $topRepository['name'],
                     'stars' => $topRepository['stargazers_count'],
                     'url' => $topRepository['html_url'],
                 ] : null,
             ]
+        ]);
+    }
+
+    public function getSearchHistory()
+    {
+        $history = GitHubSearchHistory::orderBy('updated_at', 'desc')
+            ->limit(8)
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'data' => $history,
+        ]);
+    }
+
+    public function deleteSearchHistory($id)
+    {
+        $history = GitHubSearchHistory::find($id);
+
+        if (!$history) {
+            return response()->json([
+                'status' => false,
+                'message' => 'History not found',
+            ], 404);
+        }
+
+        $history->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'History deleted successfully',
+        ]);
+    }
+
+    public function clearSearchHistory()
+    {
+        GitHubSearchHistory::query()->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'All history cleared successfully',
         ]);
     }
 }

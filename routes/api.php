@@ -12,8 +12,14 @@ Route::get('/apitest', function () {
 
 Route::get('/test', [GitHubController::class, 'test']);
 
+Route::get('/github/history/recent', [GitHubController::class, 'getSearchHistory']);
+
 Route::get('/github/user/{username}', [GitHubController::class, 'getUser']);
 
 Route::get('/github/user/{username}/repos', [GitHubController::class, 'getRepositories']);
 
 Route::get('/github/user/{username}/stats', [GitHubController::class, 'getStats']);
+
+Route::delete('/github/history/{id}', [GitHubController::class, 'deleteSearchHistory']);
+
+Route::delete('/github/history', [GitHubController::class, 'clearSearchHistory']);
